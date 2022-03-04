@@ -2,10 +2,10 @@ import { useState } from "react";
 import { ethers } from "ethers";
 import Greeter from "./artifacts/contracts/Greeter.sol/Greeter.json";
 
-const greeterAddress = "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9";
+const greeterAddress = "0x52fe55aF9AB97C68dE5CeE87FE140C9D8d53B012";
 
 function App() {
-  const [greeting, setGreetingValue] = useState("");
+  const [greeting, setGreetingValue] = useState(null);
   const [greetingMessage, setGreetingMessage] = useState("Hi");
 
   //request access to the user's MetaMask account
@@ -29,7 +29,6 @@ function App() {
       } catch (error) {
         console.log("Error: ", error);
       }
-      console.log(greetingMessage);
     }
   }
 

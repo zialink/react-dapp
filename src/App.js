@@ -12,7 +12,7 @@ function App() {
   const [userAccount, setUserAccount] = useState();
   const [amount, setAmount] = useState(0);
   const [balance, setBalance] = useState();
-  const [successfulTransaction, setSuccessfulTransaction] = useState(false);
+  const [successfulTransfer, setSuccessfulTransfer] = useState(false);
 
   //request access to the user's MetaMask account
   async function requestAccount() {
@@ -43,11 +43,10 @@ function App() {
     }
 
     fetchGreeting();
-  }, [greetingMessage, successfulTransaction]);
+  }, [greetingMessage]);
 
   // call the smart contract, send an update
   async function setGreeting() {
-    setSuccessfulTransaction(false);
     if (!greeting) return;
     if (typeof window.ethereum !== "undefined") {
       await requestAccount();
@@ -56,7 +55,6 @@ function App() {
       const contract = new ethers.Contract(greeterAddress, Greeter.abi, signer);
       const transaction = await contract.setGreeting(greeting);
       await transaction.wait();
-      transaction && setSuccessfulTransaction(true);
     }
   }
 
@@ -72,10 +70,10 @@ function App() {
     }
 
     getBalance();
-  }, [successfulTransaction, balance]);
+  }, [successfulTransfer, balance]);
 
   async function sendCoins() {
-    setSuccessfulTransaction(false);
+    setSuccessfulTransfer(false);
     if (typeof window.ethereum !== "undefined") {
       await requestAccount();
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -83,7 +81,7 @@ function App() {
       const contract = new ethers.Contract(tokenAddress, Token.abi, signer);
       const transaction = await contract.transfer(userAccount, amount);
       await transaction.wait();
-      transaction && setSuccessfulTransaction(true);
+      transaction && setSuccessfulTransfer(true);
     }
   }
 
@@ -91,7 +89,7 @@ function App() {
     <div>
       <header>
         <div>{greetingMessage && greetingMessage}</div>
-        {successfulTransaction && balance ? (
+        {successfulTransfer && balance ? (
           <div>
             You have successfully transeferred {amount} of ZETH, your balance is{" "}
             {balance}

@@ -9,7 +9,9 @@ const tokenAddress = "0x34a98b7A7ea4bDA2F2913809778b9459DCfb399a";
 function App() {
   const [greeting, setGreetingValue] = useState(null);
   const [greetingMessage, setGreetingMessage] = useState();
+  const [successfulGreeting, setSuccessfulGreeting] = useState(false);
   const [userAccount, setUserAccount] = useState();
+  const [account, setAccount] = useState();
   const [amount, setAmount] = useState(0);
   const [balance, setBalance] = useState();
   const [successfulTransfer, setSuccessfulTransfer] = useState(false);
@@ -21,6 +23,13 @@ function App() {
     });
     return account;
   }
+
+  const setAccountListener = (provider) => {
+    provider.on("accountsChanged", (accounts) => {
+      setAccount(accounts[0]);
+    });
+    provider.on("chainChanged", (_) => window.location.reload());
+  };
 
   // call the smart contrat, read the current greeting value
   useEffect(() => {
@@ -43,10 +52,11 @@ function App() {
     }
 
     fetchGreeting();
-  }, [greetingMessage]);
+  }, [greetingMessage, successfulGreeting]);
 
   // call the smart contract, send an update
   async function setGreeting() {
+    setSuccessfulGreeting(false);
     if (!greeting) return;
     if (typeof window.ethereum !== "undefined") {
       await requestAccount();
@@ -55,22 +65,25 @@ function App() {
       const contract = new ethers.Contract(greeterAddress, Greeter.abi, signer);
       const transaction = await contract.setGreeting(greeting);
       await transaction.wait();
+      setSuccessfulGreeting(true);
     }
   }
 
   useEffect(() => {
     async function getBalance() {
       if (typeof window.ethereum !== "undefined") {
-        const account = requestAccount();
+        const _account = requestAccount();
+        setAccountListener(window.ethereum);
+        const getAccount = account ? account : _account;
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const contract = new ethers.Contract(tokenAddress, Token.abi, provider);
-        const _getBalance = await contract.balanceOf(account);
+        const _getBalance = await contract.balanceOf(getAccount);
         setBalance(_getBalance.toString());
       }
     }
 
     getBalance();
-  }, [successfulTransfer, balance]);
+  }, [successfulTransfer, balance, account]);
 
   async function sendCoins() {
     setSuccessfulTransfer(false);
@@ -88,14 +101,14 @@ function App() {
   return (
     <div>
       <header>
-        <div>{greetingMessage && greetingMessage}</div>
+        <div>{(greetingMessage || successfulGreeting) && greetingMessage}</div>
         {successfulTransfer && balance ? (
           <div>
             You have successfully transeferred {amount} of ZETH, your balance is{" "}
             {balance}
           </div>
         ) : (
-          balance && <div> Your wallet balance is {balance} </div>
+          balance && <div> Your wallet balance is {balance} ZETH </div>
         )}
 
         <div>
